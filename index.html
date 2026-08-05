@@ -121,14 +121,20 @@
   .note{font-size:.76rem;color:var(--muted);background:rgba(224,142,11,.1);border:1px solid rgba(224,142,11,.3);padding:8px 10px;border-radius:8px;margin-bottom:16px;line-height:1.4;}
   .formula{font-size:.72rem;color:var(--muted);font-family:ui-monospace,Consolas,monospace;background:var(--bg);padding:4px 8px;border-radius:6px;display:inline-block;margin-top:4px;}
   details.help{margin-top:16px;}
-  details.help summary{cursor:pointer;font-size:.82rem;color:var(--muted);}
+  details.help summary{font-size:.82rem;color:var(--muted);background:rgba(0,0,0,.04);border-color:var(--border);}
+  @media (prefers-color-scheme: dark){ details.help summary{background:rgba(255,255,255,.06);} }
+  details.help summary::marker{color:var(--muted);}
   .danger-zone{max-width:1400px;margin:8px auto 0;padding:20px;text-align:center;}
   .danger-zone p{font-size:.78rem;color:var(--muted);margin:0 0 10px;}
   .btn-danger{background:transparent;color:var(--bad);border:1.5px solid var(--bad);padding:10px 22px;min-height:44px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:700;transition:all .15s;}
   .btn-danger:hover{background:var(--bad);color:#fff;}
   footer{text-align:center;padding:24px;color:var(--muted);font-size:.75rem;line-height:1.6;}
   footer a{color:var(--blue);}
-  summary{min-height:32px;padding:7px 0;line-height:1.4;cursor:pointer;}
+  summary{min-height:32px;padding:9px 12px;line-height:1.4;cursor:pointer;list-style-position:inside;
+    background:rgba(47,111,237,.08);border:1px solid rgba(47,111,237,.22);border-radius:8px;
+    font-weight:600;color:var(--blue);transition:background .15s;margin:6px 0;}
+  summary:hover{background:rgba(47,111,237,.15);}
+  summary::marker{color:var(--blue);}
   @media (max-width:600px){
     .wrap{padding:12px;gap:14px;}
     header{padding:18px 16px;}
@@ -215,7 +221,7 @@
       <div id="ar_ideal_hint" class="result-line" style="background:rgba(31,157,85,.08);"></div>
 
       <details style="margin-top:8px;">
-        <summary style="cursor:pointer;font-size:.8rem;color:var(--muted);">Reconciliar com o AR do painel (quando falta algum dado)</summary>
+        <summary style="font-size:.85rem;">Reconciliar com o AR do painel (quando falta algum dado)</summary>
         <div style="margin-top:8px;padding:10px 12px;background:rgba(47,111,237,.06);border-radius:8px;">
           <div class="field"><label>AR informado no painel</label><input type="number" step="0.01" id="ar_reverse_target"></div>
 
@@ -325,7 +331,7 @@
       <div id="ant_ideal_hint" class="result-line" style="background:rgba(31,157,85,.08);"></div>
 
       <details style="margin-top:8px;">
-        <summary style="cursor:pointer;font-size:.8rem;color:var(--muted);">Só sei a % informada no painel, não a quantidade exata — descobrir a partir do total</summary>
+        <summary style="font-size:.85rem;">Só sei a % informada no painel, não a quantidade exata — descobrir a partir do total</summary>
         <div style="margin-top:8px;padding:10px 12px;background:rgba(47,111,237,.06);border-radius:8px;">
           <label style="margin-bottom:4px;">Preencha "Processos Ativos" acima, informe aqui a % do painel e clique para preencher a quantidade.</label>
           <div class="grid" style="grid-template-columns:1fr auto;align-items:end;">
@@ -534,7 +540,7 @@
       </div>
 
       <div class="totals">
-        <div><span>🎯 Pontuação definida</span><b id="budget_sidebar_show">não definido</b></div>
+        <div><span>🎯 Orçamento (aplicabilidade)</span><b id="budget_sidebar_show">não definido</b></div>
         <div><span>Pontos obtidos</span><b id="sum_obt">0</b></div>
         <div><span>Pontos máximos aplicáveis</span><b id="sum_max">0</b></div>
         <div><span>% base (antes de fatores)</span><b id="pct_base">0%</b></div>
