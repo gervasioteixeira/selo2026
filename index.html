@@ -30,12 +30,27 @@
   .wrap{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;padding:20px;max-width:1400px;margin:0 auto;align-items:start;}
   @media (max-width:980px){ .wrap{grid-template-columns:1fr;} .sidebar{position:static !important;} }
   .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:16px;}
+  .card.indicator h2{cursor:pointer;user-select:none;position:relative;padding-right:34px;}
   .card h2{margin:0 0 4px;font-size:1.02rem;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
   .card h2 .pts{font-size:.78rem;font-weight:600;color:var(--teal-dark);background:rgba(15,155,142,.12);padding:2px 8px;border-radius:20px;}
   .card h2 .titlewrap{display:flex;align-items:center;gap:8px;}
   .card-num{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:50%;background:var(--teal);color:#fff;font-size:.76rem;font-weight:700;flex-shrink:0;}
   .card-num.factor{background:var(--blue);border-radius:8px;}
   .card .desc{color:var(--muted);font-size:.82rem;margin:2px 0 10px;line-height:1.4;}
+  .card-chevron{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex-shrink:0;color:var(--muted);transition:transform .2s;border-radius:50%;position:absolute;top:-2px;right:0;}
+  .card.indicator h2:hover .card-chevron{background:rgba(0,0,0,.05);}
+  .card.collapsed .card-chevron{transform:rotate(-90deg);}
+  .card.collapsed .card-body{display:none;}
+  .card-summary{display:none;flex-wrap:wrap;gap:8px 14px;margin-top:2px;align-items:center;}
+  .card.collapsed .card-summary{display:flex;}
+  .cs-pill{font-size:.8rem;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap;}
+  .cs-pill.cs-good{background:rgba(31,157,85,.14);color:var(--ok);}
+  .cs-pill.cs-warn{background:rgba(224,142,11,.14);color:var(--warn);}
+  .cs-pill.cs-bad{background:rgba(214,69,69,.14);color:var(--bad);}
+  .cs-pill.cs-muted{background:rgba(0,0,0,.06);color:var(--muted);}
+  @media (prefers-color-scheme: dark){ .cs-pill.cs-muted{background:rgba(255,255,255,.08);} }
+  .cs-value{font-size:.82rem;color:var(--muted);}
+  .collapse-controls{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap;}
   .apl{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:10px;cursor:pointer;padding:4px 0;min-height:44px;}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;}
   label{display:block;font-size:.76rem;color:var(--muted);margin-bottom:3px;}
@@ -172,9 +187,16 @@
       <span id="save_status" style="font-size:.78rem;color:var(--muted);align-self:center;"></span>
     </div>
 
+    <div class="collapse-controls">
+      <button type="button" class="toggle-clear" onclick="collapseAllCards()">▾ Recolher todos os cards</button>
+      <button type="button" class="toggle-clear" onclick="expandAllCards()">▸ Expandir todos os cards</button>
+    </div>
+
     <!-- ACERVO RELATIVO -->
-    <div class="card" id="card_ar">
-      <h2><span class="titlewrap"><span class="card-num">1</span>Acervo Relativo (AR)</span> <span class="pts">até 100 pontos</span></h2>
+    <div class="card indicator" id="card_ar">
+      <h2 onclick="toggleCard('card_ar')"><span class="titlewrap"><span class="card-num">1</span>Acervo Relativo (AR)</span> <span class="pts">até 100 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_ar"></div>
+      <div class="card-body">
       <p class="desc">Mede o estoque de processos pendentes em relação à demanda média de entrada. Quanto <b>menor</b>, melhor.</p>
       <span class="formula">AR = (CP ÷ médiaCN₃anos) × (1 + log₁₀(médiaCN₃anos))</span>
       <label class="apl"><input type="checkbox" id="ar_apl" checked onchange="calc()"> Este indicador se aplica à minha unidade</label>
@@ -215,11 +237,14 @@
         <div class="field"><label>AR do ano anterior (para a regra alternativa)</label><input type="number" step="0.01" id="ar_prev" oninput="calc()"></div>
       </div>
       <div class="result-line"><span>AR calculado: <b id="ar_val">0</b></span><span>Pontos: <b id="ar_pts">0</b> / 100</span></div>
+      </div>
     </div>
 
     <!-- TEMPO MEDIO -->
-    <div class="card" id="card_tp">
-      <h2><span class="titlewrap"><span class="card-num">2</span>Tempo Médio de Processos Pendentes Líquidos</span> <span class="pts">até 115 pontos</span></h2>
+    <div class="card indicator" id="card_tp">
+      <h2 onclick="toggleCard('card_tp')"><span class="titlewrap"><span class="card-num">2</span>Tempo Médio de Processos Pendentes Líquidos</span> <span class="pts">até 115 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_tp"></div>
+      <div class="card-body">
       <p class="desc">Tempo médio (em dias) de tramitação dos processos pendentes. Quanto <b>menor</b>, melhor.</p>
       <label class="apl"><input type="checkbox" id="tp_apl" checked onchange="calc()"> Este indicador se aplica à minha unidade</label>
       <div class="grid">
@@ -227,11 +252,14 @@
         <div class="field"><label>Cláusula de Barreira (CB) do grupo, em dias</label><input type="number" id="tp_cb" oninput="calc()"></div>
       </div>
       <div class="result-line"><span>Pontos: <b id="tp_pts">0</b> / 115</span></div>
+      </div>
     </div>
 
     <!-- IAD -->
-    <div class="card" id="card_iad">
-      <h2><span class="titlewrap"><span class="card-num">3</span>Índice de Atendimento à Demanda (IAD)</span> <span class="pts">até 20 pontos</span></h2>
+    <div class="card indicator" id="card_iad">
+      <h2 onclick="toggleCard('card_iad')"><span class="titlewrap"><span class="card-num">3</span>Índice de Atendimento à Demanda (IAD)</span> <span class="pts">até 20 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_iad"></div>
+      <div class="card-body">
       <p class="desc">IAD = processos baixados ÷ casos novos no período. Meta: 100% (baixar pelo menos o que entra).</p>
       <label class="apl"><input type="checkbox" id="iad_apl" checked onchange="calc()"> Este indicador se aplica à minha unidade</label>
       <div class="grid">
@@ -239,11 +267,14 @@
         <div class="field"><label>Casos novos no período</label><input type="number" id="iad_novos" oninput="calc()"></div>
       </div>
       <div class="result-line"><span>IAD: <b id="iad_val">0%</b></span><span>Pontos: <b id="iad_pts">0</b> / 20</span></div>
+      </div>
     </div>
 
     <!-- METAS CNJ -->
-    <div class="card" id="card_metas">
-      <h2><span class="titlewrap"><span class="card-num">4</span>Metas Nacionais do CNJ</span> <span class="pts">até 60 pontos</span></h2>
+    <div class="card indicator" id="card_metas">
+      <h2 onclick="toggleCard('card_metas')"><span class="titlewrap"><span class="card-num">4</span>Metas Nacionais do CNJ</span> <span class="pts">até 60 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_metas"></div>
+      <div class="card-body">
       <p class="desc">Marque quais metas se aplicam à sua unidade e quais foram cumpridas no ano-base.</p>
       <label class="apl"><input type="checkbox" id="metas_apl" checked onchange="calc()"> Este indicador se aplica à minha unidade</label>
       <fieldset class="metas" id="metas_list">
@@ -270,11 +301,14 @@
           <label class="row"><input type="checkbox" class="meta_ok" data-id="m10" onchange="calc()"> cumprida</label></div>
       </fieldset>
       <div class="result-line"><span>Pontos máximos aplicáveis: <b id="metas_max">0</b></span><span>Pontos obtidos: <b id="metas_pts">0</b></span></div>
+      </div>
     </div>
 
     <!-- PROCESSOS ANTIGOS -->
-    <div class="card" id="card_antigos">
-      <h2><span class="titlewrap"><span class="card-num">5</span>% Processos Antigos</span> <span class="pts">até 35 pontos</span></h2>
+    <div class="card indicator" id="card_antigos">
+      <h2 onclick="toggleCard('card_antigos')"><span class="titlewrap"><span class="card-num">5</span>% Processos Antigos</span> <span class="pts">até 35 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_antigos"></div>
+      <div class="card-body">
       <p class="desc">Processo antigo = distribuído e ainda ativo desde o ano de corte da meta vigente até hoje. O ano de corte avança 1 ano a cada ano (hoje é <span id="ant_cutoff_label">2022</span>; no ano que vem passa a ser <span id="ant_cutoff_next_label">2023</span>, e assim por diante) — ajuste o campo abaixo quando a meta mudar. Quanto <b>menor</b>, melhor.</p>
       <label class="apl"><input type="checkbox" id="ant_apl" checked onchange="calc()"> Este indicador se aplica à minha unidade</label>
 
@@ -300,11 +334,14 @@
           </div>
         </div>
       </details>
+      </div>
     </div>
 
     <!-- PARALISADOS -->
-    <div class="card" id="card_paralisados">
-      <h2><span class="titlewrap"><span class="card-num">6</span>Processos Paralisados &gt; 90 dias</span> <span class="pts">até 50 pontos</span></h2>
+    <div class="card indicator" id="card_paralisados">
+      <h2 onclick="toggleCard('card_paralisados')"><span class="titlewrap"><span class="card-num">6</span>Processos Paralisados &gt; 90 dias</span> <span class="pts">até 50 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_paralisados"></div>
+      <div class="card-body">
       <p class="desc">Fórmula: (processos em dia ÷ total ativos) × 50. Quanto <b>menor</b> o % paralisado, melhor. <b>Importante:</b> o TPA é o total geral (parados + em dia) — confirmado com dados reais do painel: 990 em dia + 267 parados = TPA 1257.</p>
       <label class="apl"><input type="checkbox" id="par_apl" checked onchange="calc()"> Este indicador se aplica à minha unidade</label>
       <div class="grid">
@@ -313,22 +350,28 @@
       </div>
       <div class="result-line"><span>Processos em dia (calculado: total − parados): <b id="par_ok_show">0</b></span><span>% paralisados: <b id="par_pctshow">0%</b></span></div>
       <div class="result-line"><span>Pontos: <b id="par_pts">0</b> / 50</span></div>
+      </div>
     </div>
 
     <!-- BALCAO VIRTUAL -->
-    <div class="card" id="card_balcao">
-      <h2><span class="titlewrap"><span class="card-num">7</span>Satisfação — Balcão Virtual</span> <span class="pts">até 20 pontos</span></h2>
+    <div class="card indicator" id="card_balcao">
+      <h2 onclick="toggleCard('card_balcao')"><span class="titlewrap"><span class="card-num">7</span>Satisfação — Balcão Virtual</span> <span class="pts">até 20 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_balcao"></div>
+      <div class="card-body">
       <p class="desc">Fórmula: (% avaliações positivas ÷ 90%) × 20, limitado a 20 pontos.</p>
       <label class="apl"><input type="checkbox" id="bv_apl" onchange="calc()"> Este indicador se aplica à minha unidade</label>
       <div class="grid">
         <div class="field"><label>% de avaliações positivas (notas 4 e 5)</label><input type="number" step="0.01" id="bv_pct" oninput="calc()"></div>
       </div>
       <div class="result-line"><span>Pontos: <b id="bv_pts">0</b> / 20</span></div>
+      </div>
     </div>
 
     <!-- SEEU -->
-    <div class="card" id="card_seeu">
-      <h2><span class="titlewrap"><span class="card-num">8</span>SEEU — Execução Penal</span> <span class="pts">até 100 (PURA) / 70 (MISTA)</span></h2>
+    <div class="card indicator" id="card_seeu">
+      <h2 onclick="toggleCard('card_seeu')"><span class="titlewrap"><span class="card-num">8</span>SEEU — Execução Penal</span> <span class="pts">até 100 (PURA) / 70 (MISTA)</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_seeu"></div>
+      <div class="card-body">
       <p class="desc">Aplicável apenas a varas com competência de execução penal. Marque cada critério atendido.</p>
       <label class="apl"><input type="checkbox" id="seeu_apl" onchange="calc()"> Este indicador se aplica à minha unidade</label>
       <div class="field" style="max-width:220px;"><label>Tipo de vara</label>
@@ -347,22 +390,28 @@
         <label class="row"><input type="checkbox" class="seeu_ok" data-pura="20" data-mista="10" onchange="calc()"> Processos com sentença de extinção aguardando arquivamento: zerados</label>
       </div>
       <div class="result-line"><span>Pontos: <b id="seeu_pts">0</b> / <b id="seeu_max">100</b></span></div>
+      </div>
     </div>
 
     <!-- MEDIDA PROTETIVA -->
-    <div class="card" id="card_protetiva">
-      <h2><span class="titlewrap"><span class="card-num">9</span>Medidas Protetivas de Urgência</span> <span class="pts">10 pontos</span></h2>
+    <div class="card indicator" id="card_protetiva">
+      <h2 onclick="toggleCard('card_protetiva')"><span class="titlewrap"><span class="card-num">9</span>Medidas Protetivas de Urgência</span> <span class="pts">10 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_protetiva"></div>
+      <div class="card-body">
       <p class="desc">Tempo médio entre recebimento/ajuizamento e a 1ª decisão (concessão/denegação). Prêmio integral se ≤ 2 dias.</p>
       <label class="apl"><input type="checkbox" id="mp_apl" onchange="calc()"> Este indicador se aplica à minha unidade</label>
       <div class="grid">
         <div class="field"><label>Tempo médio atual (dias)</label><input type="number" step="0.1" id="mp_tempo" oninput="calc()"></div>
       </div>
       <div class="result-line"><span>Pontos: <b id="mp_pts">0</b> / 10</span></div>
+      </div>
     </div>
 
     <!-- SNA -->
-    <div class="card" id="card_sna">
-      <h2><span class="titlewrap"><span class="card-num">10</span>Reavaliação de Acolhimento (SNA)</span> <span class="pts">até 30 pontos</span></h2>
+    <div class="card indicator" id="card_sna">
+      <h2 onclick="toggleCard('card_sna')"><span class="titlewrap"><span class="card-num">10</span>Reavaliação de Acolhimento (SNA)</span> <span class="pts">até 30 pontos</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_sna"></div>
+      <div class="card-body">
       <p class="desc">% de acolhimentos com mais de 3 meses no SNA que tiveram reavaliação nos 90 dias seguintes. ≥98% = 30 pts · 90–98% = 15 pts · abaixo = 0. <b>Confirmado com dados reais do painel:</b> se não há nenhum acolhimento há mais de 3 meses no SNA, a unidade recebe os 30 pontos cheios (nada a reavaliar).</p>
       <label class="apl"><input type="checkbox" id="sna_apl" onchange="calc()"> Este indicador se aplica à minha unidade</label>
       <label class="apl"><input type="checkbox" id="sna_none" onchange="calc()"> Não há acolhimentos há mais de 3 meses no SNA (nada a reavaliar → pontuação cheia)</label>
@@ -370,11 +419,14 @@
         <div class="field"><label>% de reavaliação atual</label><input type="number" step="0.01" id="sna_pct" oninput="calc()"></div>
       </div>
       <div class="result-line"><span>Pontos: <b id="sna_pts">0</b> / 30</span></div>
+      </div>
     </div>
 
     <!-- INSPECOES PRISIONAIS -->
-    <div class="card" id="card_insp_prisionais">
-      <h2><span class="titlewrap"><span class="card-num">11</span>Inspeções em Estabelecimentos Prisionais</span> <span class="pts">15 (VEP) / 10 (demais)</span></h2>
+    <div class="card indicator" id="card_insp_prisionais">
+      <h2 onclick="toggleCard('card_insp_prisionais')"><span class="titlewrap"><span class="card-num">11</span>Inspeções em Estabelecimentos Prisionais</span> <span class="pts">15 (VEP) / 10 (demais)</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_insp_prisionais"></div>
+      <div class="card-body">
       <p class="desc">Fórmula adaptada da Portaria CNJ 471/2025 (Art. 9º, XXV-a): <b>inspeção atrasada vale meio ponto</b>, não zero — <code>Pontos = (meses no prazo + meses atrasados÷2) ÷ 12 × máximo</code>. <b>Atenção:</b> se faltar QUALQUER mês sem nenhuma inspeção lançada, a Portaria zera a pontuação inteira do indicador.</p>
       <label class="apl"><input type="checkbox" id="ip_apl" onchange="calc()"> Este indicador se aplica à minha unidade</label>
       <div class="grid">
@@ -386,11 +438,14 @@
       </div>
       <label class="apl" style="margin-top:8px;"><input type="checkbox" id="ip_faltou" onchange="calc()"> Houve algum mês sem NENHUMA inspeção lançada (zera a pontuação, pela regra da Portaria)</label>
       <div class="result-line"><span>Pontos: <b id="ip_pts">0</b> / <b id="ip_max">15</b></span></div>
+      </div>
     </div>
 
     <!-- INSPECOES SOCIOEDUCATIVAS -->
-    <div class="card" id="card_insp_socio">
-      <h2><span class="titlewrap"><span class="card-num">12</span>Inspeções — Medidas Socioeducativas</span> <span class="pts" id="is_max_label">até 10 pontos (5+5)</span></h2>
+    <div class="card indicator" id="card_insp_socio">
+      <h2 onclick="toggleCard('card_insp_socio')"><span class="titlewrap"><span class="card-num">12</span>Inspeções — Medidas Socioeducativas</span> <span class="pts" id="is_max_label">até 10 pontos (5+5)</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_insp_socio"></div>
+      <div class="card-body">
       <p class="desc">5 pontos meio fechado + 5 pontos meio aberto. Fórmula adaptada da Portaria CNJ 471/2025 (Art. 9º, IX): <b>inspeção atrasada vale meio ponto</b>, não zero. <b>Nem toda unidade tem as duas competências</b> — marque só a(s) que se aplica(m) à sua vara (confirmado com dados reais: algumas unidades só têm "Meio Aberto", valendo só 5 pontos no total, não 10).</p>
       <label class="apl"><input type="checkbox" id="is_apl" onchange="calc()"> Este indicador se aplica à minha unidade</label>
       <div class="grid">
@@ -408,18 +463,24 @@
         </div>
       </div>
       <div class="result-line"><span>Pontos: <b id="is_pts">0</b> / <b id="is_max_show">10</b></span></div>
+      </div>
     </div>
 
     <!-- FATOR POTENCIALIZADOR -->
-    <div class="card">
-      <h2><span class="titlewrap"><span class="card-num factor">A</span>Fator Potencializador — Índice de Conciliação</span> <span class="pts">+1 p.p.</span></h2>
+    <div class="card indicator" id="card_conc">
+      <h2 onclick="toggleCard('card_conc')"><span class="titlewrap"><span class="card-num factor">A</span>Fator Potencializador — Índice de Conciliação</span> <span class="pts">+1 p.p.</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_conc"></div>
+      <div class="card-body">
       <p class="desc">Se a unidade atingir Índice de Conciliação ≥ 15% em <u>todos</u> os meses aplicáveis do ano, soma-se +1 ponto percentual direto na pontuação relativa final.</p>
       <label class="apl"><input type="checkbox" id="conc_ok" onchange="calc()"> Atingi ≥15% de conciliação em todos os meses aplicáveis</label>
+      </div>
     </div>
 
     <!-- FATOR DE CORRECAO -->
-    <div class="card">
-      <h2><span class="titlewrap"><span class="card-num factor">B</span>Fator de Correção — Ouvidoria</span> <span class="pts">FTc1</span></h2>
+    <div class="card indicator" id="card_ftc">
+      <h2 onclick="toggleCard('card_ftc')"><span class="titlewrap"><span class="card-num factor">B</span>Fator de Correção — Ouvidoria</span> <span class="pts">FTc1</span><span class="card-chevron">▾</span></h2>
+      <div class="card-summary" id="sum_ftc"></div>
+      <div class="card-body">
       <p class="desc">Penaliza a pontuação final quando menos de 95% das demandas da Ouvidoria são respondidas em até 20 dias.</p>
       <span class="formula">FTc1 = ((DA20d ÷ Dptotal) ÷ 0,95 − 1) ÷ 100 · aplicado só se negativo</span>
       <div class="grid">
@@ -427,6 +488,7 @@
         <div class="field"><label>Total de demandas recebidas</label><input type="number" id="ftc_dp" oninput="calc()"></div>
       </div>
       <div class="result-line"><span>% respondido em 20 dias: <b id="ftc_pctshow">—</b></span><span>FTc1: <b id="ftc_val">0%</b></span></div>
+      </div>
     </div>
 
     <details class="help">
@@ -472,7 +534,7 @@
       </div>
 
       <div class="totals">
-        <div><span>🎯 Orçamento (aplicabilidade)</span><b id="budget_sidebar_show">não definido</b></div>
+        <div><span>🎯 Pontuação definida</span><b id="budget_sidebar_show">não definido</b></div>
         <div><span>Pontos obtidos</span><b id="sum_obt">0</b></div>
         <div><span>Pontos máximos aplicáveis</span><b id="sum_max">0</b></div>
         <div><span>% base (antes de fatores)</span><b id="pct_base">0%</b></div>
@@ -518,6 +580,7 @@ function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
 
 function calc(){
   const details = []; // {name, obtained, max, suggestion}
+  const summaries = {}; // {cardKey: {applies, value, pts, max}} — usado no resumo do card recolhido
 
   // ---- Acervo Relativo ----
   {
@@ -533,6 +596,7 @@ function calc(){
     else if(altOn && prev>0 && ar<=prev*0.9) pts=80;
     else if(cb>0 && ar>0) pts=clamp((cb/ar)*100,0,100);
     els('ar_pts').textContent = fmt(pts,1);
+    summaries.ar = {applies: chk('ar_apl'), value:`AR ${fmt(ar,2)}`, pts, max:100};
 
     // CP ideal para bater a Cláusula de Barreira (100 pontos), mantendo os Casos Novos como estão
     const idealHint = els('ar_ideal_hint');
@@ -557,6 +621,7 @@ function calc(){
     if(cb>0 && tp<=cb) pts=115;
     else if(cb>0 && tp>0) pts=clamp((cb/tp)*115,0,115);
     els('tp_pts').textContent = fmt(pts,1);
+    summaries.tp = {applies: chk('tp_apl'), value: tp>0?`${fmt(tp,0)} dias`:'—', pts, max:115};
     if(chk('tp_apl')) details.push({name:'Tempo Médio Pendentes Líquidos', cardId:'card_tp', obtained:pts, max:115,
       suggestion:`Tempo atual: ${fmt(tp,0)} dias. Reduza para até ${fmt(cb,0)} dias (CB do grupo) para pontuação máxima — priorize sentenciar/baixar os processos mais antigos primeiro.`});
   }
@@ -568,6 +633,7 @@ function calc(){
     els('iad_val').textContent = fmt(iad*100,1)+'%';
     const pts = clamp(iad,0,1)*20;
     els('iad_pts').textContent = fmt(pts,1);
+    summaries.iad = {applies: chk('iad_apl'), value:`IAD ${fmt(iad*100,1)}%`, pts, max:20};
     if(chk('iad_apl')) details.push({name:'Índice de Atendimento à Demanda', cardId:'card_iad', obtained:pts, max:20,
       suggestion:`IAD atual: ${fmt(iad*100,1)}%. Baixe ao menos a mesma quantidade de processos que ingressam (IAD ≥ 100%) para pontuação máxima.`});
   }
@@ -586,6 +652,9 @@ function calc(){
     });
     els('metas_max').textContent = max;
     els('metas_pts').textContent = obt;
+    const metasAplCount = document.querySelectorAll('.meta_apl:checked').length;
+    const metasOkCount = Array.from(document.querySelectorAll('.meta_apl:checked')).filter(cb=>document.querySelector(`.meta_ok[data-id="${cb.dataset.id}"]`).checked).length;
+    summaries.metas = {applies: chk('metas_apl'), value:`${metasOkCount}/${metasAplCount} metas cumpridas`, pts:obt, max};
     if(chk('metas_apl')) details.push({name:'Metas Nacionais do CNJ', cardId:'card_metas', obtained:obt, max:max,
       suggestion: pend.length? `Metas ainda não cumpridas: ${pend.join(', ')}. Cumprir essas metas soma pontos diretamente.` : 'Todas as metas aplicáveis já cumpridas.'});
   }
@@ -601,6 +670,7 @@ function calc(){
     if(cb>0 && pct<=cb) pts=35;
     else if(cb>0 && pct>0) pts=clamp((cb/pct)*35,0,35);
     els('ant_pts').textContent = fmt(pts,1);
+    summaries.antigos = {applies: chk('ant_apl'), value:`${fmt(pct,2)}% antigos`, pts, max:35};
 
     const idealHint = els('ant_ideal_hint');
     if(total>0 && cb>0){
@@ -627,6 +697,7 @@ function calc(){
     els('par_pctshow').textContent = fmt(pctPar,2)+'%';
     const pts = tpa>0 ? (ok/tpa)*50 : 0;
     els('par_pts').textContent = fmt(pts,1);
+    summaries.paralisados = {applies: chk('par_apl'), value:`${fmt(pctPar,2)}% parados`, pts, max:50};
     if(chk('par_apl')) details.push({name:'Processos Paralisados >90 dias', cardId:'card_paralisados', obtained:pts, max:50,
       suggestion:`${fmt(pctPar,2)}% dos processos ativos estão parados há mais de 90 dias (${fmt(qtd,0)} de ${fmt(tpa,0)}). Movimente-os (mesmo despachos de mero expediente contam) para chegar perto de 0%.`});
   }
@@ -636,6 +707,7 @@ function calc(){
     const pct = num('bv_pct');
     const pts = clamp(pct/90,0,1)*20;
     els('bv_pts').textContent = fmt(pts,1);
+    summaries.balcao = {applies: chk('bv_apl'), value:`${fmt(pct,1)}% positivas`, pts, max:20};
     if(chk('bv_apl')) details.push({name:'Satisfação Balcão Virtual', cardId:'card_balcao', obtained:pts, max:20,
       suggestion:`% positivas atual: ${fmt(pct,1)}%. Atinja 90% de avaliações positivas (notas 4-5) para pontuação máxima.`});
   }
@@ -645,13 +717,15 @@ function calc(){
     const tipo = els('seeu_tipo').value;
     const max = tipo==='pura'?100:70;
     els('seeu_max').textContent = max;
-    let obt=0, total=0;
-    document.querySelectorAll('.seeu_ok').forEach(cb=>{
+    let obt=0, total=0, checkedCount=0;
+    const seeuBoxes = document.querySelectorAll('.seeu_ok');
+    seeuBoxes.forEach(cb=>{
       const pt = tipo==='pura'? parseInt(cb.dataset.pura): parseInt(cb.dataset.mista);
       total+=pt;
-      if(cb.checked) obt+=pt;
+      if(cb.checked){ obt+=pt; checkedCount++; }
     });
     els('seeu_pts').textContent = obt;
+    summaries.seeu = {applies: chk('seeu_apl'), value:`${checkedCount}/${seeuBoxes.length} critérios (${tipo==='pura'?'PURA':'MISTA'})`, pts:obt, max};
     if(chk('seeu_apl')) details.push({name:'SEEU (Execução Penal)', cardId:'card_seeu', obtained:obt, max:max,
       suggestion: obt<max? 'Zere pendências de incidentes, guias e juntadas no SEEU há mais de 30 dias para pontuar os critérios restantes.':'Todos os critérios do SEEU atendidos.'});
   }
@@ -661,6 +735,7 @@ function calc(){
     const t = num('mp_tempo');
     const pts = (t>0 && t<=2)?10:0;
     els('mp_pts').textContent = pts;
+    summaries.protetiva = {applies: chk('mp_apl'), value: t>0?`${fmt(t,1)} dias`:'—', pts, max:10};
     if(chk('mp_apl')) details.push({name:'Medidas Protetivas de Urgência', cardId:'card_protetiva', obtained:pts, max:10,
       suggestion:`Tempo médio atual: ${fmt(t,1)} dias. É preciso decidir (conceder ou denegar) em até 2 dias para pontuar (critério binário — não há pontuação parcial prevista na Resolução).`});
   }
@@ -674,6 +749,7 @@ function calc(){
     if(noneMode) pts=30;
     else if(pct>=98) pts=30; else if(pct>=90) pts=15;
     els('sna_pts').textContent = pts;
+    summaries.sna = {applies: chk('sna_apl'), value: noneMode? 'sem pendências' : `${fmt(pct,1)}% reavaliação`, pts, max:30};
     if(chk('sna_apl')) details.push({name:'Reavaliação de Acolhimento (SNA)', cardId:'card_sna', obtained:pts, max:30,
       suggestion: noneMode ? 'Sem acolhimentos pendentes de reavaliação — pontuação cheia mantida.' : `% atual: ${fmt(pct,1)}%. Abaixo de 90% = 0 pts; 90–98% = 15 pts; ≥98% = 30 pts. Priorize reavaliar os acolhimentos mais antigos no SNA.`});
   }
@@ -695,6 +771,7 @@ function calc(){
     const faltou = chk('ip_faltou');
     const pts = inspecaoPontos(noPrazo, foraPrazo, faltou, max);
     els('ip_pts').textContent = fmt(pts,1);
+    summaries.insp_prisionais = {applies: chk('ip_apl'), value: faltou? 'mês faltante (zera)' : `${noPrazo}/12 no prazo, ${foraPrazo} atrasados`, pts, max};
     if(chk('ip_apl')) details.push({name:'Inspeções Estab. Prisionais', cardId:'card_insp_prisionais', obtained:pts, max:max,
       suggestion: faltou ? 'Há um mês sem nenhuma inspeção lançada — isso zera a pontuação (regra da Portaria CNJ 471/2025). Regularize o CNIEP.' : `${noPrazo}/12 meses no prazo, ${foraPrazo} atrasados. Lance a inspeção no CNIEP até o dia 5 de cada mês subsequente para não perder pontos.`});
   }
@@ -712,6 +789,7 @@ function calc(){
     const parts=[];
     if(fechadoApl) parts.push(chk('is_fechado_faltou') ? 'Meio Fechado: zerado (mês faltante)' : `Meio Fechado: ${fmt(fechadoPts,1)}/5 pts`);
     if(abertoApl) parts.push(chk('is_aberto_faltou') ? 'Meio Aberto: zerado (mês faltante)' : `Meio Aberto: ${fmt(abertoPts,1)}/5 pts`);
+    summaries.insp_socio = {applies: chk('is_apl'), value: parts.length? parts.join(' · ') : 'nenhuma competência marcada', pts, max:isMax};
     if(chk('is_apl')) details.push({name:'Inspeções Socioeducativas', cardId:'card_insp_socio', obtained:pts, max:isMax,
       suggestion: parts.length ? `${parts.join(' · ')}. Lance no CNIUPS até o dia 10 do mês subsequente.` : 'Marque qual competência (Meio Fechado e/ou Aberto) se aplica à sua unidade.'});
   }
@@ -769,6 +847,14 @@ function calc(){
   const pctCorrigida = pctBase*(1+ftc1);
   const potOn = chk('conc_ok');
   const pctFinal = pctCorrigida + (potOn?1:0);
+
+  // Resumos dos fatores A/B (não seguem o padrão obtido/máx dos indicadores 1-12)
+  els('sum_conc').innerHTML = potOn
+    ? `<span class="cs-pill cs-good">+1 p.p.</span><span class="cs-value">Meta de conciliação batida</span>`
+    : `<span class="cs-pill cs-muted">+0 p.p.</span><span class="cs-value">Meta de conciliação não batida</span>`;
+  els('sum_ftc').innerHTML = ftc1<0
+    ? `<span class="cs-pill cs-bad">${fmt(ftc1*100,3)}%</span><span class="cs-value">${pctResp!==null?fmt(pctResp*100,1)+'% respondido em 20d':'sem dados'}</span>`
+    : `<span class="cs-pill cs-good">0%</span><span class="cs-value">${pctResp!==null?fmt(pctResp*100,1)+'% respondido em 20d':'sem dados informados'}</span>`;
 
   els('sum_obt').textContent = fmt(sumObt,1);
   els('sum_max').textContent = fmt(sumMax,1);
@@ -834,6 +920,49 @@ function calc(){
     });
   }
 
+  renderCardSummaries(summaries);
+  scheduleSave();
+}
+
+// Preenche o resumo de cada card (mostrado quando o card está recolhido) com
+// o essencial: valor apurado + pontos obtidos. O máximo só aparece quando ele
+// varia por card (SEEU, Insp. Prisionais, Insp. Socio, Metas) — nos indicadores
+// de máximo fixo ele já está visível no selo do cabeçalho, então não repetimos.
+const VARIABLE_MAX = new Set(['metas','seeu','insp_prisionais','insp_socio']);
+function renderCardSummaries(summaries){
+  Object.keys(summaries).forEach(key=>{
+    const el = els('sum_'+key);
+    if(!el) return;
+    const s = summaries[key];
+    if(!s.applies){
+      el.innerHTML = `<span class="cs-pill cs-muted">Não aplicável</span>`;
+      return;
+    }
+    if(s.max<=0){
+      el.innerHTML = `<span class="cs-pill cs-muted">0 pts</span><span class="cs-value">Configure os campos deste indicador</span>`;
+      return;
+    }
+    const ratio = s.pts/s.max;
+    const cls = ratio>=0.95 ? 'cs-good' : ratio>=0.6 ? 'cs-warn' : 'cs-bad';
+    const ptsLabel = VARIABLE_MAX.has(key) ? `${fmt(s.pts,1)} / ${fmt(s.max,1)} pts` : `${fmt(s.pts,1)} pts`;
+    el.innerHTML = `<span class="cs-pill ${cls}">${ptsLabel}</span><span class="cs-value">${s.value}</span>`;
+  });
+}
+
+function toggleCard(cardId){
+  const card = els(cardId);
+  if(!card) return;
+  card.classList.toggle('collapsed');
+  scheduleSave();
+}
+
+function collapseAllCards(){
+  document.querySelectorAll('.card.indicator').forEach(c=>c.classList.add('collapsed'));
+  scheduleSave();
+}
+
+function expandAllCards(){
+  document.querySelectorAll('.card.indicator').forEach(c=>c.classList.remove('collapsed'));
   scheduleSave();
 }
 
@@ -1022,6 +1151,7 @@ function clearAll(){
     else i.checked=false;
   });
   document.querySelectorAll('.meta_apl').forEach(cb=>{ cb.checked = ['m2','m5','m8','m4','m10'].includes(cb.dataset.id); });
+  expandAllCards();
   localStorage.removeItem(STORAGE_KEY);
   calc();
   flashStatus('Dados limpos.');
@@ -1039,6 +1169,7 @@ function saveState(){
   document.querySelectorAll('.meta_apl').forEach(el=>{ data['meta_apl_'+el.dataset.id]=el.checked; });
   document.querySelectorAll('.meta_ok').forEach(el=>{ data['meta_ok_'+el.dataset.id]=el.checked; });
   document.querySelectorAll('.seeu_ok').forEach((el,idx)=>{ data['seeu_ok_'+idx]=el.checked; });
+  data.collapsedCards = Array.from(document.querySelectorAll('.card.indicator.collapsed')).map(c=>c.id);
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     flashStatus('Salvo automaticamente neste navegador ✓');
@@ -1075,6 +1206,9 @@ function loadState(){
     document.querySelectorAll('.meta_apl').forEach(el=>{ const k='meta_apl_'+el.dataset.id; if(data[k]!==undefined) el.checked=data[k]; });
     document.querySelectorAll('.meta_ok').forEach(el=>{ const k='meta_ok_'+el.dataset.id; if(data[k]!==undefined) el.checked=data[k]; });
     document.querySelectorAll('.seeu_ok').forEach((el,idx)=>{ const k='seeu_ok_'+idx; if(data[k]!==undefined) el.checked=data[k]; });
+    if(Array.isArray(data.collapsedCards)){
+      data.collapsedCards.forEach(id=>{ const c=els(id); if(c) c.classList.add('collapsed'); });
+    }
     return true;
   }catch(e){ return false; }
 }
