@@ -177,6 +177,20 @@
       <p class="desc" style="margin-top:4px;">Isso desmarca só os checkboxes "aplicável" (e as submetas/subcompetências) — os números que você já digitou continuam salvos, para você testar outras combinações rapidamente.</p>
     </div>
 
+    <div class="card" id="card_tipo_vara" style="border:1.5px solid var(--teal);">
+      <h2 style="font-size:.95rem;">🏛️ Tipo de vara (competência de execução penal)</h2>
+      <p class="desc">Essa informação é pedida duas vezes na Resolução — no card 8 (SEEU) como "Privativa/Mista" e no card 11 (Inspeções Prisionais) como "VEP/Demais" — mas é o mesmo dado sobre a sua unidade. Preencha aqui uma vez só e os dois cards são preenchidos automaticamente (você ainda pode ajustar cada um individualmente lá, se precisar de uma exceção).</p>
+      <div class="grid" style="grid-template-columns:1fr;">
+        <div class="field"><label>Minha vara é...</label>
+          <select id="tipo_vara_shared" onchange="syncTipoVara()">
+            <option value="">— selecione —</option>
+            <option value="privativa">Privativa de Execução Penal (VEP / PURA)</option>
+            <option value="mista">Mista ou outra competência (não exclusiva de execução penal)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <div class="note">
       <b>Numeração dos cards:</b> os círculos <span class="card-num" style="vertical-align:middle;">1</span>–<span class="card-num" style="vertical-align:middle;">12</span> seguem a ordem dos incisos I a XI do Art. 4º da Resolução (o SEEU ocupa o "VII" duplicado no texto oficial, por isso aparece como <span class="card-num" style="vertical-align:middle;">8</span> aqui). Os cards com letra (<span class="card-num factor" style="vertical-align:middle;">A</span>/<span class="card-num factor" style="vertical-align:middle;">B</span>) são os fatores de ajuste (Art. 6º e Art. 5º §4º) — não somam pontos próprios, eles corrigem a pontuação relativa final.
     </div>
@@ -1027,6 +1041,22 @@ function resetAplicabilidade(){
   els('is_aberto_apl').checked = false;
   calc();
   flashStatus('Aplicabilidade de todos os indicadores foi desmarcada — os números que você digitou continuam salvos.');
+}
+
+// Preenche de uma vez os dois seletores de "tipo de vara" (SEEU e Inspeções
+// Prisionais) que, na Resolução, pedem a mesma informação (vara privativa de
+// execução penal ou não) com rótulos diferentes em cada card.
+function syncTipoVara(){
+  const val = els('tipo_vara_shared').value;
+  if(val === 'privativa'){
+    els('seeu_tipo').value = 'pura';
+    els('ip_tipo').value = 'vep';
+  } else if(val === 'mista'){
+    els('seeu_tipo').value = 'mista';
+    els('ip_tipo').value = 'outras';
+  }
+  calc();
+  if(val) flashStatus('Tipo de vara aplicado ao SEEU (card 8) e às Inspeções Prisionais (card 11).');
 }
 
 function updateCutoffLabels(){
