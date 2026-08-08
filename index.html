@@ -11,6 +11,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Selos TJPB">
 <meta name="description" content="Simulador não-oficial de Selos de Produtividade (Res. 49/2026) — calcule sua pontuação e veja o que melhorar, tudo salvo apenas no seu navegador.">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Calculadora de Selos de Produtividade — TJPB (Res. 49/2026)</title>
 <style>
   :root{
@@ -151,6 +154,17 @@
   @media (hover:none) and (pointer:coarse){
     .rec:active{background:rgba(47,111,237,.18);}
     .apl:active, .checklist label.row:active{background:rgba(0,0,0,.03);}
+  }
+  .print-only{display:none;}
+  @media print{
+    body.printing-recs > *{display:none !important;}
+    body.printing-recs #print_recs{display:block !important;}
+    #print_recs{padding:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f2a37;background:#fff;}
+    #print_recs h1{font-size:1.25rem;margin:0 0 4px;}
+    #print_recs .print-meta{font-size:.85rem;color:#5b6b7b;margin:0 0 18px;padding-bottom:10px;border-bottom:1px solid #ccc;}
+    #print_recs .rec-print{border-left:3px solid #2f6fed;padding:8px 12px;margin-bottom:12px;background:#f4f6fb;page-break-inside:avoid;}
+    #print_recs .rec-print b{display:block;margin-bottom:3px;}
+    #print_recs .rec-print .impact{color:#0b7d73;font-weight:600;}
   }
 </style>
 </head>
@@ -577,6 +591,7 @@
     <div class="card">
       <h2 style="font-size:.95rem;">O que melhorar primeiro</h2>
       <div id="recs"></div>
+      <button type="button" class="toggle-clear" style="margin-top:10px;width:100%;" onclick="exportarSugestoesPDF()">📄 Exportar sugestões em PDF</button>
     </div>
   </div>
 </div>
@@ -584,12 +599,16 @@
 <div class="danger-zone">
   <p>Apaga todos os dados preenchidos e salvos neste navegador. Esta ação não pode ser desfeita.</p>
   <button class="btn-danger" onclick="clearAll()">🗑️ Limpar tudo</button>
+  <p style="margin-top:18px;">Se esta página não estiver mostrando a versão mais recente publicada (mesmo depois de atualizar), use o botão abaixo. Ele ignora qualquer cópia salva em cache pelo navegador — mas também apaga os dados salvos aqui, então prefira o F5 normal no dia a dia.</p>
+  <button class="btn-danger" onclick="forcarAtualizacaoCompleta()">🔄 Forçar atualização completa (ignora o cache)</button>
 </div>
 
 <footer>
   Ferramenta não-oficial de simulação — TJPB, Resolução nº 49/2026. Confirme sempre os resultados publicados oficialmente pela Gerência de Planejamento.<br>
   Desenvolvido por: Gervásio Teixeira — <a href="mailto:gervasio.eufrazino@tjpb.jus.br">gervasio.eufrazino@tjpb.jus.br</a>
 </footer>
+
+<div id="print_recs" class="print-only"></div>
 
 <script>
 function els(id){return document.getElementById(id);}
@@ -1191,6 +1210,57 @@ function clearAll(){
   localStorage.removeItem(STORAGE_KEY);
   calc();
   flashStatus('Dados limpos.');
+}
+
+// Gera uma versão para impressão do card "O que melhorar primeiro" e abre o
+// diálogo de impressão do navegador — de lá, o usuário escolhe "Salvar como
+// PDF" no destino. Evita depender de bibliotecas externas.
+function exportarSugestoesPDF(){
+  const recDiv = els('recs');
+  const printArea = els('print_recs');
+  if(!recDiv || !printArea) return;
+  const now = new Date();
+  const dataStr = now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  const seloTxt = els('selo_badge') ? els('selo_badge').textContent.trim() : '';
+  const pctTxt = els('pct_final') ? els('pct_final').textContent.trim() : '';
+
+  let html = `<h1>O que melhorar primeiro — Calculadora de Selos TJPB</h1>`;
+  html += `<div class="print-meta">Gerado em ${dataStr} · Situação atual: <b>${seloTxt}</b> (${pctTxt}) · Simulação não-oficial baseada na Resolução nº 49/2026 — confirme sempre com a Gerência de Planejamento.</div>`;
+
+  const recCards = recDiv.querySelectorAll('.rec');
+  if(recCards.length === 0){
+    html += `<p>Nenhuma sugestão disponível no momento — preencha os indicadores na calculadora para gerar recomendações.</p>`;
+  } else {
+    recCards.forEach(rec=>{
+      const clone = rec.cloneNode(true);
+      clone.removeAttribute('onclick');
+      clone.removeAttribute('onkeydown');
+      clone.removeAttribute('tabindex');
+      clone.removeAttribute('role');
+      clone.classList.remove('rec');
+      clone.classList.add('rec-print');
+      const link = clone.querySelector('.rec-link');
+      if(link) link.remove();
+      html += clone.outerHTML;
+    });
+  }
+  printArea.innerHTML = html;
+
+  document.body.classList.add('printing-recs');
+  window.print();
+}
+window.addEventListener('afterprint', ()=>{ document.body.classList.remove('printing-recs'); });
+
+// Força um recarregamento que ignora qualquer cópia em cache (do navegador
+// ou de CDN) anexando um parâmetro único à URL — diferente do F5 normal,
+// que mantém os dados salvos. Aqui os dados são apagados de propósito, para
+// garantir que a próxima carga reflita 100% a versão publicada mais recente.
+function forcarAtualizacaoCompleta(){
+  if(!confirm('Isso vai apagar os dados salvos neste navegador e recarregar a página ignorando qualquer cópia em cache. Continuar?')) return;
+  clearTimeout(saveTimer); // cancela qualquer salvamento automático pendente, senão ele pode "ressuscitar" os dados durante a navegação
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  const base = location.href.split('?')[0].split('#')[0];
+  location.href = base + '?v=' + Date.now();
 }
 
 // ---- Persistência local (localStorage) ----
