@@ -522,6 +522,17 @@
         <div class="field"><label>Total de demandas recebidas</label><input type="number" id="ftc_dp" oninput="calc()"></div>
       </div>
       <div class="result-line"><span>% respondido em 20 dias: <b id="ftc_pctshow">—</b></span><span>FTc1: <b id="ftc_val">0%</b></span></div>
+
+      <details style="margin-top:8px;">
+        <summary style="font-size:.85rem;">Só sei o % de atendimento no prazo do painel, não as quantidades — preencher a partir da %</summary>
+        <div style="margin-top:8px;padding:10px 12px;background:rgba(47,111,237,.06);border-radius:8px;">
+          <label style="margin-bottom:4px;">O resultado do FTc1 depende só da proporção entre as duas quantidades, não dos valores absolutos. Se souber o "Total de demandas recebidas", preencha-o acima antes de usar isto; se não souber, deixamos 100 como referência (o FTc1 calculado fica igual de qualquer forma).</label>
+          <div class="grid" style="grid-template-columns:1fr auto;align-items:end;">
+            <div class="field"><label>% Atendimento no Prazo (painel)</label><input type="number" step="0.01" id="ftc_reverse_target"></div>
+            <button type="button" class="toggle-clear" style="white-space:nowrap;height:34px;" onclick="fillFtcFromPct()">Preencher a partir da % ⟵</button>
+          </div>
+        </div>
+      </details>
       </div>
     </div>
 
@@ -1049,6 +1060,17 @@ function fillAntQtdFromPct(){
   els('ant_qtd').value = Math.round(qtd);
   calc();
   flashStatus(`Quantidade preenchida: ${Math.round(qtd)} (a partir da % ${fmt(target,2)}).`);
+}
+
+function fillFtcFromPct(){
+  const target = num('ftc_reverse_target');
+  if(target<=0){ flashStatus('Informe a % do painel antes.'); return; }
+  let dp = num('ftc_dp');
+  if(dp<=0){ dp=100; els('ftc_dp').value=100; }
+  const da20 = target/100*dp;
+  els('ftc_da20').value = Math.round(da20*100)/100;
+  calc();
+  flashStatus(`Quantidade "respondidas em 20 dias" preenchida: ${fmt(da20,2)} (a partir da % ${fmt(target,2)}).`);
 }
 
 function resetAplicabilidade(){
